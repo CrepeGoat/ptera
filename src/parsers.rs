@@ -2,23 +2,28 @@ use crate::core::Parser;
 
 
 #[derive(Debug)]
-struct Alt2<T1, T2>(T1, T2);
+struct Alt2<P1, P2>(P1, P2);
 
-impl<'a, U, T1: Parser<'a, U>, T2: Parser<'a, U>> Parser<'a, U> for Alt2<T1, T2> {
-    fn call(&self, s: &'a str) -> Option<U> {
+impl<'a, P1, P2> Parser<'a, > for Alt2<P1, P2>
+    where P1: Parser<'a>,
+          P2: Parser<'a, Output=P1::Output>
+{
+    type Output = P1::Output;
+    fn call(&self, s: &'a str) -> Option<Self::Output> {
         self.0.call(&s).or_else(|| self.1.call(&s))
     }
 }
 
 
 #[derive(Debug)]
-struct Seq2Fwd<T1, T2>(T1, T2);
+struct Seq2Fwd<P1, P2>(P1, P2);
 
-impl<'a, U1, U2, T1, T2> Parser<'a, (U1, U2)> for Seq2Fwd<T1, T2>
-where T1: Parser<'a, U1>,
-      T2: Parser<'a, U2>,
+impl<'a, P1, P2> Parser<'a> for Seq2Fwd<P1, P2>
+where P1: Parser<'a>,
+      P2: Parser<'a, Output=P1::Output>,
 {
-    fn call(&self, s: &'a str) -> Option<(U1, U2)> {
+    type Output = (P1::Output, P2::Output);
+    fn call(&self, s: &'a str) -> Option<Self::Output> {
         (0..=s.len()).filter_map(
             |i| self.0.call(&s[..i]).and_then(
                 |u1| self.1.call(&s[i..]).map(|u2| (u1, u2))
@@ -29,13 +34,14 @@ where T1: Parser<'a, U1>,
 
 
 #[derive(Debug)]
-struct Seq2Rev<T1, T2>(T1, T2);
+struct Seq2Rev<P1, P2>(P1, P2);
 
-impl<'a, U1, U2, T1, T2> Parser<'a, (U1, U2)> for Seq2Rev<T1, T2>
-where T1: Parser<'a, U1>,
-      T2: Parser<'a, U2>,
+impl<'a, P1, P2> Parser<'a> for Seq2Rev<P1, P2>
+where P1: Parser<'a>,
+      P2: Parser<'a, Output=P1::Output>,
 {
-    fn call(&self, s: &'a str) -> Option<(U1, U2)> {
+    type Output = (P1::Output, P2::Output);
+    fn call(&self, s: &'a str) -> Option<Self::Output> {
         (0..=s.len()).rev().filter_map(
             |i| self.0.call(&s[..i]).and_then(
                 |u1| self.1.call(&s[i..]).map(|u2| (u1, u2))
@@ -48,7 +54,9 @@ where T1: Parser<'a, U1>,
 #[derive(Debug)]
 struct Digits(u32);
 
-impl<'a> Parser<'a, &'a str> for Digits {
+impl<'a> Parser<'a> for Digits {
+    type Output = &'a str;
+
     fn call(&self, s: &'a str) -> Option<&'a str> {
         if s.chars().all(|c| c.is_digit(self.0)) {
             Some(s)
@@ -62,7 +70,9 @@ impl<'a> Parser<'a, &'a str> for Digits {
 #[derive(Debug)]
 struct Str<'b>(&'b str);
 
-impl<'a, 'b> Parser<'a, &'a str> for Str<'b> {
+impl<'a, 'b> Parser<'a> for Str<'b> {
+    type Output = &'a str;
+
     fn call(&self, s: &'a str) -> Option<&'a str> {
         if s == self.0 {
             Some(s)
