@@ -1,7 +1,7 @@
 pub trait Parser<'a> {
     type Output;
 
-    fn call(&self, s: &'a str) -> Option<Self::Output>;
+    fn call(&mut self, s: &'a str) -> Option<Self::Output>;
 
     fn map<V, F>(self, func: F) -> MappedParser<Self, F>
     where
