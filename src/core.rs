@@ -31,7 +31,7 @@ where
 {
     type Output = V;
 
-    fn call(&self, s: &'a str) -> Option<Self::Output> {
+    fn call(&mut self, s: &'a str) -> Option<Self::Output> {
         self.parser.call(s).map(&self.mapping)
     }
 }

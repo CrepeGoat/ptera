@@ -8,10 +8,7 @@ struct FractalParser<F, P>
     make_parser: F,
 }
 
-impl<'a, U, F, P> FractalParser<'a, U, F, P>
-    where F: Fn(&dyn Parser<'a, U>) -> P,
-          P: Parser<'a, U>,
-{
+impl<F, P> FractalParser<F, P> {
     fn new(maker: F) -> Self {
         Self {
             active_parser: None,
@@ -20,17 +17,28 @@ impl<'a, U, F, P> FractalParser<'a, U, F, P>
     }
 }
 
-impl<'a, U, F, P> Parser<'a, U> for FractalParser<'a, U, F, P>
+impl<'a, U, F, P> Parser<'a, U> for FractalParser<F, P>
     where F: Fn(&dyn Parser<'a, U>) -> P,
           P: Parser<'a, U>,
 {
     fn call(&mut self, s: &'a str) -> Option<U> {
-        if let Some(parser) = self.active_parser {
-            return parser(s);
+        if let Some(parser) = &mut self.active_parser {
+            return parser.call(s);
         }
-        self.active_parser = Some(self.maker(&self));
+        self.active_parser = Some((self.make_parser)(self));
         let result = self.call(s);
         self.active_parser = None;
         result
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_fractal_parser() {
+        unimplemented!();
     }
 }

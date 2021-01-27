@@ -9,7 +9,7 @@ impl<'a, P1, P2> Parser<'a, > for Alt2<P1, P2>
           P2: Parser<'a, Output=P1::Output>
 {
     type Output = P1::Output;
-    fn call(&self, s: &'a str) -> Option<Self::Output> {
+    fn call(&mut self, s: &'a str) -> Option<Self::Output> {
         self.0.call(&s).or_else(|| self.1.call(&s))
     }
 }
@@ -23,7 +23,7 @@ where P1: Parser<'a>,
       P2: Parser<'a, Output=P1::Output>,
 {
     type Output = (P1::Output, P2::Output);
-    fn call(&self, s: &'a str) -> Option<Self::Output> {
+    fn call(&mut self, s: &'a str) -> Option<Self::Output> {
         (0..=s.len()).filter_map(
             |i| self.0.call(&s[..i]).and_then(
                 |u1| self.1.call(&s[i..]).map(|u2| (u1, u2))
@@ -41,7 +41,7 @@ where P1: Parser<'a>,
       P2: Parser<'a, Output=P1::Output>,
 {
     type Output = (P1::Output, P2::Output);
-    fn call(&self, s: &'a str) -> Option<Self::Output> {
+    fn call(&mut self, s: &'a str) -> Option<Self::Output> {
         (0..=s.len()).rev().filter_map(
             |i| self.0.call(&s[..i]).and_then(
                 |u1| self.1.call(&s[i..]).map(|u2| (u1, u2))
@@ -57,7 +57,7 @@ pub struct Digits(pub u32);
 impl<'a> Parser<'a> for Digits {
     type Output = &'a str;
 
-    fn call(&self, s: &'a str) -> Option<&'a str> {
+    fn call(&mut self, s: &'a str) -> Option<&'a str> {
         if s.chars().all(|c| c.is_digit(self.0)) {
             Some(s)
         } else {
@@ -73,7 +73,7 @@ pub struct Str<'b>(pub &'b str);
 impl<'a, 'b> Parser<'a> for Str<'b> {
     type Output = &'a str;
 
-    fn call(&self, s: &'a str) -> Option<&'a str> {
+    fn call(&mut self, s: &'a str) -> Option<&'a str> {
         if s == self.0 {
             Some(s)
         } else {
@@ -104,7 +104,7 @@ mod tests {
 
     #[test]
     fn test_seq2_fwd() {
-        let parser = Seq2Fwd(Digits(10), Str(&" apples"));
+        let mut parser = Seq2Fwd(Digits(10), Str(&" apples"));
 
         assert_eq!(parser.call(&"4 apples"), Some(("4", " apples")));
         assert_eq!(parser.call(&"7 oranges"), None);
@@ -115,7 +115,7 @@ mod tests {
 
     #[test]
     fn test_seq2_rev() {
-        let parser = Seq2Rev(Digits(10), Str(&" apples"));
+        let mut parser = Seq2Rev(Digits(10), Str(&" apples"));
 
         assert_eq!(parser.call(&"4 apples"), Some(("4", " apples")));
         assert_eq!(parser.call(&"7 oranges"), None);
@@ -126,7 +126,7 @@ mod tests {
 
     #[test]
     fn test_alt2() {
-        let parser = Alt2(Str(&"hello"), Str(&"'ello"));
+        let mut parser = Alt2(Str(&"hello"), Str(&"'ello"));
 
         assert_eq!(parser.call(&"hello"), Some("hello"));
         assert_eq!(parser.call(&"'ello"), Some("'ello"));
