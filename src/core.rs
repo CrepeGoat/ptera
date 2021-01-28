@@ -3,9 +3,10 @@ pub trait Parser<'a> {
 
     fn call(&self, s: &'a str) -> Option<Self::Output>;
 
-    fn map<V, P, F>(self, func: F) -> MappedParser<P, F>
-        where P: Parser<'a>,
-              F: Fn(U) -> V,
+    fn map<V, F>(self, func: F) -> MappedParser<Self, F>
+    where
+        Self: Sized,
+        F: Fn(Self::Output) -> V,
     {
         MappedParser::new(self, func)
     }
@@ -23,14 +24,14 @@ impl<P, F> MappedParser<P, F> {
     }
 }
 
-
-impl<'a, V, P, F> Parser<'a> for MappedParser<F, P>
-    where P: Parser<'a>,
-          F: Fn(P::Output) -> V,
+impl<'a, V, P, F> Parser<'a> for MappedParser<P, F>
+where
+    P: Parser<'a>,
+    F: Fn(P::Output) -> V,
 {
     type Output = V;
 
     fn call(&self, s: &'a str) -> Option<Self::Output> {
-        self.parser.call(s).map(self.mapping)
+        self.parser.call(s).map(&self.mapping)
     }
 }
