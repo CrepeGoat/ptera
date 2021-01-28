@@ -2,13 +2,13 @@ use crate::core::Parser;
 
 
 #[derive(Debug)]
-struct FractalParser<F, P>
+struct FractalParser<P, F>
 {
     active_parser: Option<P>,
     make_parser: F,
 }
 
-impl<F, P> FractalParser<F, P> {
+impl<F, P> FractalParser<P, F> {
     fn new(maker: F) -> Self {
         Self {
             active_parser: None,
@@ -17,11 +17,14 @@ impl<F, P> FractalParser<F, P> {
     }
 }
 
-impl<'a, U, F, P> Parser<'a, U> for FractalParser<F, P>
-    where F: Fn(&dyn Parser<'a, U>) -> P,
-          P: Parser<'a, U>,
+impl<'a, P, F> Parser<'a> for FractalParser<P, F>
+where
+    P: Parser<'a>,
+    F: Fn(&dyn Parser<'a, Output=P::Output>) -> P,
 {
-    fn call(&mut self, s: &'a str) -> Option<U> {
+    type Output = P::Output;
+
+    fn call(&mut self, s: &'a str) -> Option<Self::Output> {
         if let Some(parser) = &mut self.active_parser {
             return parser.call(s);
         }
