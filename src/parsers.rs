@@ -2,7 +2,7 @@ use crate::core::Parser;
 
 
 #[derive(Debug)]
-struct Alt2<P1, P2>(P1, P2);
+pub struct Alt2<P1, P2>(pub P1, pub P2);
 
 impl<'a, P1, P2> Parser<'a, > for Alt2<P1, P2>
     where P1: Parser<'a>,
@@ -16,7 +16,7 @@ impl<'a, P1, P2> Parser<'a, > for Alt2<P1, P2>
 
 
 #[derive(Debug)]
-struct Seq2Fwd<P1, P2>(P1, P2);
+pub struct Seq2Fwd<P1, P2>(pub P1, pub P2);
 
 impl<'a, P1, P2> Parser<'a> for Seq2Fwd<P1, P2>
 where P1: Parser<'a>,
@@ -34,7 +34,7 @@ where P1: Parser<'a>,
 
 
 #[derive(Debug)]
-struct Seq2Rev<P1, P2>(P1, P2);
+pub struct Seq2Rev<P1, P2>(pub P1, pub P2);
 
 impl<'a, P1, P2> Parser<'a> for Seq2Rev<P1, P2>
 where P1: Parser<'a>,
@@ -52,7 +52,7 @@ where P1: Parser<'a>,
 
 
 #[derive(Debug)]
-struct Digits(u32);
+pub struct Digits(pub u32);
 
 impl<'a> Parser<'a> for Digits {
     type Output = &'a str;
@@ -68,7 +68,7 @@ impl<'a> Parser<'a> for Digits {
 
 
 #[derive(Debug)]
-struct Str<'b>(&'b str);
+pub struct Str<'b>(pub &'b str);
 
 impl<'a, 'b> Parser<'a> for Str<'b> {
     type Output = &'a str;

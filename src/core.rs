@@ -35,3 +35,16 @@ where
         self.parser.call(s).map(&self.mapping)
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::parsers::Digits;
+
+    #[test]
+    fn test_parser_map() {
+        assert_eq!(Digits(10).map(|s| s.parse::<u32>().unwrap()).call(&"123"), Some(123u32));
+    }
+}
+
