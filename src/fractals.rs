@@ -39,9 +39,32 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::parsers::{Alt2, Seq2Fwd, Seq2Rev, Digits, Str};
 
     #[test]
     fn test_fractal_parser() {
-        unimplemented!();
+        let mut parser = FractalParser::new(|fractal|
+            Alt2(
+                Digits(10).map(|s| s.parse::<u32>().unwrap()),
+                Alt2(
+                    Seq2Rev(
+                        fractal,
+                        Seq2Rev(
+                            Str(&" * "),
+                            fractal,
+                        ),
+                    ).map(|(x1, (s, x2))| x1*x2),
+                    Seq2Rev(
+                        fractal,
+                        Seq2Rev(
+                            Str(&" + "),
+                            fractal,
+                        ),
+                    ).map(|(x1, (s, x2))| x1+x2),
+                ),
+            )
+        );
+
+        assert_eq!(parser.call(&"1 + 2 * 3 + 4"), Some(11));
     }
 }
