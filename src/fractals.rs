@@ -24,7 +24,7 @@ where
 {
     type Output = P::Output;
 
-    fn call(&mut self, s: &'a str) -> Option<Self::Output> {
+    fn call(&self, s: &'a str) -> Option<Self::Output> {
         if let Some(parser) = &mut self.active_parser {
             return parser.call(s);
         }
