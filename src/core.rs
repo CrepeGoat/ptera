@@ -1,7 +1,7 @@
 pub trait Parser<'a> {
     type Output;
 
-    fn call(&self, s: &'a str) -> Option<Self::Output>;
+    fn call(&mut self, s: &'a str) -> Option<Self::Output>;
 
     fn post<V, F>(self, func: F) -> PostProcessedParser<Self, F>
     where
@@ -31,7 +31,7 @@ where
 {
     type Output = V;
 
-    fn call(&self, s: &'a str) -> Option<Self::Output> {
+    fn call(&mut self, s: &'a str) -> Option<Self::Output> {
         (&self.mapping)(self.parser.call(s))
     }
 }

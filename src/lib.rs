@@ -1,5 +1,6 @@
 mod core;
 mod parsers;
+mod fractals;
 
 #[cfg(test)]
 mod tests {
