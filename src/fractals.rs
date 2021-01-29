@@ -12,7 +12,7 @@ where
 {
     fn new<F>(maker: F) -> Self
     where
-        F: Fn(Pin<&FractalParser<P>>) -> P,
+        F: Fn(Pin<&dyn Parser<'a, Output = P::Output>>) -> P,
     {
         let mut self_ = Self {parser: None};
         let self_pin = Pin::new(&self_);
@@ -37,11 +37,9 @@ where
     }
 }
 
-impl<'a, P> Parser<'a> for Pin<&FractalParser<P>>
-where
-    P: Parser<'a> + std::marker::Unpin
+impl<'a, O> Parser<'a> for Pin<&dyn Parser<'a, Output = O>>
 {
-    type Output = <FractalParser<P> as Parser<'a>>::Output;
+    type Output = O;
 
     fn call(&self, s: &'a str) -> Option<Self::Output> {
         self.call(s)
