@@ -1,37 +1,50 @@
+use std::pin::Pin;
+
 use crate::core::Parser;
 
 
 #[derive(Debug)]
-struct FractalParser<P, F>
-{
-    active_parser: Option<P>,
-    make_parser: F,
-}
+struct FractalParser<P>{parser: Option<P>}
 
-impl<F, P> FractalParser<P, F> {
-    fn new(maker: F) -> Self {
-        Self {
-            active_parser: None,
-            make_parser: maker,
-        }
+impl<'a, P> FractalParser<P>
+where
+    P: Parser<'a> + std::marker::Unpin
+{
+    fn new<F>(maker: F) -> Self
+    where
+        F: Fn(Pin<&FractalParser<P>>) -> P,
+    {
+        let mut self_ = Self {parser: None};
+        let self_pin = Pin::new(&self_);
+        let parser = maker(self_pin);
+        self_.parser = Some(parser);
+
+        self_
     }
 }
 
-impl<'a, P, F> Parser<'a> for FractalParser<P, F>
+impl<'a, P> Parser<'a> for FractalParser<P>
 where
     P: Parser<'a>,
-    F: Fn(&dyn Parser<'a, Output=P::Output>) -> P,
 {
     type Output = P::Output;
 
     fn call(&self, s: &'a str) -> Option<Self::Output> {
-        if let Some(parser) = &mut self.active_parser {
+        if let Some(parser) = &self.parser {
             return parser.call(s);
         }
-        self.active_parser = Some((self.make_parser)(self));
-        let result = self.call(s);
-        self.active_parser = None;
-        result
+        unreachable!();
+    }
+}
+
+impl<'a, P> Parser<'a> for Pin<&FractalParser<P>>
+where
+    P: Parser<'a> + std::marker::Unpin
+{
+    type Output = <FractalParser<P> as Parser<'a>>::Output;
+
+    fn call(&self, s: &'a str) -> Option<Self::Output> {
+        self.call(s)
     }
 }
 
