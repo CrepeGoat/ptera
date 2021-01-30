@@ -20,7 +20,7 @@ pub struct Seq2Fwd<P1, P2>(pub P1, pub P2);
 
 impl<'a, P1, P2> Parser<'a> for Seq2Fwd<P1, P2>
 where P1: Parser<'a>,
-      P2: Parser<'a, Output=P1::Output>,
+      P2: Parser<'a>,
 {
     type Output = (P1::Output, P2::Output);
     fn call(&self, s: &'a str) -> Option<Self::Output> {
@@ -38,7 +38,7 @@ pub struct Seq2Rev<P1, P2>(pub P1, pub P2);
 
 impl<'a, P1, P2> Parser<'a> for Seq2Rev<P1, P2>
 where P1: Parser<'a>,
-      P2: Parser<'a, Output=P1::Output>,
+      P2: Parser<'a>,
 {
     type Output = (P1::Output, P2::Output);
     fn call(&self, s: &'a str) -> Option<Self::Output> {
