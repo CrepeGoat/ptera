@@ -1,5 +1,5 @@
-pub trait Parser<'a> {
-    type Output;
+pub trait Parser<'b, 'a: 'b> {
+    type Output: 'b;
 
     fn call(&self, s: &'a str) -> Option<Self::Output>;
 
@@ -24,9 +24,9 @@ impl<P, F> PostProcessedParser<P, F> {
     }
 }
 
-impl<'a, V, P, F> Parser<'a> for PostProcessedParser<P, F>
+impl<'b, 'a: 'b, V: 'b, P, F> Parser<'b, 'a> for PostProcessedParser<P, F>
 where
-    P: Parser<'a>,
+    P: Parser<'b, 'a>,
     F: Fn(Option<P::Output>) -> Option<V>,
 {
     type Output = V;

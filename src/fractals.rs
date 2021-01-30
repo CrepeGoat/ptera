@@ -6,13 +6,13 @@ use crate::core::Parser;
 #[derive(Debug)]
 struct FractalParser<P>{parser: Option<P>}
 
-impl<'b, 'a: 'b, P, O: 'b> FractalParser<P>
+impl<'b, 'a: 'b, P: 'b> FractalParser<P>
 where
-    P: Parser<'a, Output = O> + std::marker::Unpin
+    P: Parser<'b, 'a> + std::marker::Unpin
 {
     fn new<F>(maker: F) -> Self
     where
-        F: Fn(ParserRef<'b, 'a, O>) -> P,
+        F: Fn(ParserRef<'b, 'a, P::Output>) -> P,
     {
         let mut self_ = Self {parser: None};
         let self_pin = ParserRef(Pin::new(&self_));
@@ -23,9 +23,9 @@ where
     }
 }
 
-impl<'a, P> Parser<'a> for FractalParser<P>
+impl<'b, 'a: 'b, P> Parser<'b, 'a> for FractalParser<P>
 where
-    P: Parser<'a>,
+    P: Parser<'b, 'a>,
 {
     type Output = P::Output;
 
@@ -37,9 +37,9 @@ where
     }
 }
 
-struct ParserRef<'b, 'a: 'b, O>(Pin<&'b (dyn Parser<'a, Output = O> + std::marker::Unpin)>);
+struct ParserRef<'b, 'a: 'b, O: 'b>(Pin<&'b (dyn Parser<'b, 'a, Output = O> + std::marker::Unpin)>);
 
-impl<'b, 'a: 'b, O: 'b> Parser<'a> for ParserRef<'b, 'a, O>
+impl<'b, 'a: 'b, O: 'b> Parser<'b, 'a> for ParserRef<'b, 'a, O>
 {
     type Output = O;
 

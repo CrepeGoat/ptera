@@ -4,9 +4,9 @@ use crate::core::Parser;
 #[derive(Debug)]
 pub struct Alt2<P1, P2>(pub P1, pub P2);
 
-impl<'a, P1, P2> Parser<'a, > for Alt2<P1, P2>
-    where P1: Parser<'a>,
-          P2: Parser<'a, Output=P1::Output>
+impl<'b, 'a: 'b, P1, P2> Parser<'b, 'a> for Alt2<P1, P2>
+    where P1: Parser<'b, 'a>,
+          P2: Parser<'b, 'a, Output=P1::Output>
 {
     type Output = P1::Output;
     fn call(&self, s: &'a str) -> Option<Self::Output> {
@@ -18,9 +18,9 @@ impl<'a, P1, P2> Parser<'a, > for Alt2<P1, P2>
 #[derive(Debug)]
 pub struct Seq2Fwd<P1, P2>(pub P1, pub P2);
 
-impl<'a, P1, P2> Parser<'a> for Seq2Fwd<P1, P2>
-where P1: Parser<'a>,
-      P2: Parser<'a, Output=P1::Output>,
+impl<'b, 'a: 'b, P1, P2> Parser<'b, 'a> for Seq2Fwd<P1, P2>
+where P1: Parser<'b, 'a>,
+      P2: Parser<'b, 'a, Output=P1::Output>,
 {
     type Output = (P1::Output, P2::Output);
     fn call(&self, s: &'a str) -> Option<Self::Output> {
@@ -36,9 +36,9 @@ where P1: Parser<'a>,
 #[derive(Debug)]
 pub struct Seq2Rev<P1, P2>(pub P1, pub P2);
 
-impl<'a, P1, P2> Parser<'a> for Seq2Rev<P1, P2>
-where P1: Parser<'a>,
-      P2: Parser<'a, Output=P1::Output>,
+impl<'b, 'a: 'b, P1, P2> Parser<'b, 'a> for Seq2Rev<P1, P2>
+where P1: Parser<'b, 'a>,
+      P2: Parser<'b, 'a, Output=P1::Output>,
 {
     type Output = (P1::Output, P2::Output);
     fn call(&self, s: &'a str) -> Option<Self::Output> {
@@ -54,7 +54,7 @@ where P1: Parser<'a>,
 #[derive(Debug)]
 pub struct Digits(pub u32);
 
-impl<'a> Parser<'a> for Digits {
+impl<'b, 'a: 'b> Parser<'b, 'a> for Digits {
     type Output = &'a str;
 
     fn call(&self, s: &'a str) -> Option<&'a str> {
@@ -70,7 +70,7 @@ impl<'a> Parser<'a> for Digits {
 #[derive(Debug)]
 pub struct Str<'b>(pub &'b str);
 
-impl<'a, 'b> Parser<'a> for Str<'b> {
+impl<'b, 'a: 'b> Parser<'b, 'a> for Str<'b> {
     type Output = &'a str;
 
     fn call(&self, s: &'a str) -> Option<&'a str> {
