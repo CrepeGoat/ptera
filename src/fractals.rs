@@ -50,11 +50,11 @@ impl<'a, O> Parser<'a> for Pin<&dyn Parser<'a, Output = O>>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parsers::{Alt2, Seq2Fwd, Seq2Rev, Digits, Str};
+    use crate::parsers::{Alt2, Seq2Rev, Digits, Str};
 
     #[test]
     fn test_fractal_parser() {
-        let mut parser = FractalParser::new(|fractal|
+        let parser = FractalParser::new(|fractal|
             Alt2(
                 Digits(10).post(|opt| opt.and_then(|s| s.parse::<u32>().ok())),
                 Alt2(
@@ -64,14 +64,14 @@ mod tests {
                             Str(&" * "),
                             fractal,
                         ),
-                    ).post(|opt| opt.map(|(x1, (s, x2))| x1*x2)),
+                    ).post(|opt| opt.map(|(x1, (_s, x2))| x1*x2)),
                     Seq2Rev(
                         fractal,
                         Seq2Rev(
                             Str(&" + "),
                             fractal,
                         ),
-                    ).post(|opt| opt.map(|(x1, (s, x2))| x1+x2)),
+                    ).post(|opt| opt.map(|(x1, (_s, x2))| x1+x2)),
                 ),
             )
         );
