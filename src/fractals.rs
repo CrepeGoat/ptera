@@ -6,16 +6,16 @@ use crate::core::Parser;
 #[derive(Debug)]
 struct FractalParser<P>{parser: Option<P>}
 
-impl<'a, P> FractalParser<P>
+impl<'b, 'a: 'b, P> FractalParser<P>
 where
-    P: Parser<'a> + std::marker::Unpin
+    P: Parser<'a, Output: 'b> + std::marker::Unpin
 {
     fn new<F>(maker: F) -> Self
     where
-        F: Fn(Pin<&dyn Parser<'a, Output = P::Output>>) -> P,
+        F: Fn(ParserRef<'b, 'a, P::Output>) -> P,
     {
         let mut self_ = Self {parser: None};
-        let self_pin = Pin::new(&self_);
+        let self_pin = ParserRef(Pin::new(&self_));
         let parser = maker(self_pin);
         self_.parser = Some(parser);
 
@@ -37,12 +37,14 @@ where
     }
 }
 
-impl<'a, O> Parser<'a> for Pin<&dyn Parser<'a, Output = O>>
+struct ParserRef<'b, 'a: 'b, O>(Pin<&'b (dyn Parser<'a, Output = O> + std::marker::Unpin)>);
+
+impl<'b, 'a: 'b, O: 'b> Parser<'a> for ParserRef<'b, 'a, O>
 {
     type Output = O;
 
     fn call(&self, s: &'a str) -> Option<Self::Output> {
-        self.call(s)
+        self.0.call(s)
     }
 }
 
