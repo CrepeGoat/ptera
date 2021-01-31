@@ -16,11 +16,11 @@ where
 {
     fn new<F>(maker: F) -> Pin<Box<Self>>
     where
-        F: Fn(Pin<Box<dyn Parser<'a, Output = P::Output>>>) -> P,
+        F: Fn(ParserRef<'a, P::Output>) -> P,
     {
         let mut pinned_self = Box::pin(Self {parser: None, _pin: PhantomPinned});
 
-        let parser = maker(pinned_self);
+        let parser = maker(ParserRef(pinned_self));
         unsafe {
             pinned_self.as_mut().get_unchecked_mut().parser = Some(parser);
         }
@@ -43,12 +43,15 @@ where
     }
 }
 
-impl<'a, O> Parser<'a> for Pin<Box<dyn Parser<'a, Output = O>>>
+
+struct ParserRef<'a, O>(Pin<Box<dyn Parser<'a, Output = O>>>);
+
+impl<'a, O> Parser<'a> for ParserRef<'a, O>
 {
     type Output = O;
 
     fn call(&self, s: &'a str) -> Option<Self::Output> {
-        self.call(s)
+        (*self).call(s)
     }
 }
 
