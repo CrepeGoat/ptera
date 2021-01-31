@@ -1,25 +1,31 @@
 use std::pin::Pin;
+use std::marker::PhantomPinned;
 
 use crate::core::Parser;
 
 
 #[derive(Debug)]
-struct FractalParser<P>{parser: Option<P>}
+struct FractalParser<P>{
+    parser: Option<P>,
+    _pin: PhantomPinned,
+}
 
 impl<'a, P> FractalParser<P>
 where
-    P: Parser<'a> + std::marker::Unpin
+    P: Parser<'a>
 {
-    fn new<F>(maker: F) -> Self
+    fn new<F>(maker: F) -> Pin<Box<Self>>
     where
-        F: Fn(Pin<&dyn Parser<'a, Output = P::Output>>) -> P,
+        F: Fn(Pin<Box<dyn Parser<'a, Output = P::Output>>>) -> P,
     {
-        let mut self_ = Self {parser: None};
-        let self_pin = Pin::new(&self_);
-        let parser = maker(self_pin);
-        self_.parser = Some(parser);
+        let mut pinned_self = Box::pin(Self {parser: None, _pin: PhantomPinned});
 
-        self_
+        let parser = maker(pinned_self);
+        unsafe {
+            pinned_self.as_mut().get_unchecked_mut().parser = Some(parser);
+        }
+
+        pinned_self
     }
 }
 
@@ -37,7 +43,7 @@ where
     }
 }
 
-impl<'a, O> Parser<'a> for Pin<&dyn Parser<'a, Output = O>>
+impl<'a, O> Parser<'a> for Pin<Box<dyn Parser<'a, Output = O>>>
 {
     type Output = O;
 
