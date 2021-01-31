@@ -19,8 +19,7 @@ where
         F: Fn(ParserRef<'a, P::Output>) -> P,
     {
         let mut pinned_self = Box::pin(Self {parser: None, _pin: PhantomPinned});
-
-        let parser = maker(ParserRef(pinned_self));
+        let parser = maker(ParserRef(&(*pinned_self) as *const FractalParser<P>));
         unsafe {
             pinned_self.as_mut().get_unchecked_mut().parser = Some(parser);
         }
@@ -43,15 +42,19 @@ where
     }
 }
 
-
-struct ParserRef<'a, O>(Pin<Box<dyn Parser<'a, Output = O>>>);
+#[derive(Copy, Clone)]
+struct ParserRef<'a, O>(*const dyn Parser<'a, Output = O>);
 
 impl<'a, O> Parser<'a> for ParserRef<'a, O>
 {
     type Output = O;
 
     fn call(&self, s: &'a str) -> Option<Self::Output> {
-        (*self).call(s)
+        let parser_ref = unsafe {match self.0.as_ref() {
+            Some(x) => x,
+            None => unreachable!(),
+        }};
+        parser_ref.call(s)
     }
 }
 
