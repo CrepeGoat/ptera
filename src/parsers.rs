@@ -104,7 +104,7 @@ mod tests {
 
     #[test]
     fn test_seq2_fwd() {
-        let mut parser = Seq2Fwd(Digits(10), Str(&" apples"));
+        let parser = Seq2Fwd(Digits(10), Str(&" apples"));
 
         assert_eq!(parser.call(&"4 apples"), Some(("4", " apples")));
         assert_eq!(parser.call(&"7 oranges"), None);
@@ -115,7 +115,7 @@ mod tests {
 
     #[test]
     fn test_seq2_rev() {
-        let mut parser = Seq2Rev(Digits(10), Str(&" apples"));
+        let parser = Seq2Rev(Digits(10), Str(&" apples"));
 
         assert_eq!(parser.call(&"4 apples"), Some(("4", " apples")));
         assert_eq!(parser.call(&"7 oranges"), None);
@@ -126,7 +126,7 @@ mod tests {
 
     #[test]
     fn test_alt2() {
-        let mut parser = Alt2(Str(&"hello"), Str(&"'ello"));
+        let parser = Alt2(Str(&"hello"), Str(&"'ello"));
 
         assert_eq!(parser.call(&"hello"), Some("hello"));
         assert_eq!(parser.call(&"'ello"), Some("'ello"));
