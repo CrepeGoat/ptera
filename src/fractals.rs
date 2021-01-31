@@ -1,3 +1,4 @@
+use std::rc::Rc;
 use std::pin::Pin;
 use std::marker::PhantomPinned;
 
@@ -14,11 +15,11 @@ impl<'a, P> FractalParser<P>
 where
     P: Parser<'a>
 {
-    fn new<F>(maker: F) -> Pin<Box<Self>>
+    fn new<F>(maker: F) -> Pin<Rc<Self>>
     where
-        F: Fn(Pin<Box<dyn Parser<'a, Output = P::Output>>>) -> P,
+        F: Fn(Pin<Rc<dyn Parser<'a, Output = P::Output>>>) -> P,
     {
-        let mut pinned_self = Box::pin(Self {parser: None, _pin: PhantomPinned});
+        let mut pinned_self = Rc::pin(Self {parser: None, _pin: PhantomPinned});
 
         let parser = maker(pinned_self);
         unsafe {
@@ -43,7 +44,7 @@ where
     }
 }
 
-impl<'a, O> Parser<'a> for Pin<Box<dyn Parser<'a, Output = O>>>
+impl<'a, O> Parser<'a> for Pin<Rc<dyn Parser<'a, Output = O>>>
 {
     type Output = O;
 
