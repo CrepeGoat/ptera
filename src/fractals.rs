@@ -10,7 +10,7 @@ struct FractalParser<P>{
     _pin: PhantomPinned,
 }
 
-impl<'a, P> FractalParser<P>
+impl<'a, P: 'static> FractalParser<P>
 where
     P: Parser<'a>
 {
