@@ -1,3 +1,4 @@
+use std::cmp::{min, max};
 use crate::core::Parser;
 
 
@@ -10,7 +11,23 @@ impl<'a, P1, P2> Parser<'a, > for Alt2<P1, P2>
 {
     type Output = P1::Output;
     fn call(&self, s: &'a str) -> Option<Self::Output> {
-        self.0.call(&s).or_else(|| self.1.call(&s))
+        let mut result = None;
+        
+        if self.0.min_len() <= s.len() && s.len() <= self.0.max_len() {
+            result = result.or_else(|| self.0.call(&s))
+        }
+        if self.1.min_len() <= s.len() && s.len() <= self.1.max_len() {
+            result = result.or_else(|| self.1.call(&s))
+        }
+
+        result
+    }
+
+    fn min_len(&self) -> usize {
+        min(self.0.min_len(), self.1.min_len())
+    }
+    fn max_len(&self) -> usize {
+        max(self.0.max_len(), self.1.max_len())
     }
 }
 
@@ -24,11 +41,27 @@ where P1: Parser<'a>,
 {
     type Output = (P1::Output, P2::Output);
     fn call(&self, s: &'a str) -> Option<Self::Output> {
-        (0..=s.len()).filter_map(
+        let i_min = max(
+            self.0.min_len(),
+            s.len().saturating_sub(self.1.max_len())
+        );
+        let i_max = min(
+            self.0.max_len().saturating_add(1),
+            (s.len()+1).saturating_sub(self.1.min_len())
+        );
+
+        (i_min..i_max).filter_map(
             |i| self.0.call(&s[..i]).and_then(
                 |u1| self.1.call(&s[i..]).map(|u2| (u1, u2))
             )
         ).next()
+    }
+
+    fn min_len(&self) -> usize {
+        self.0.min_len().saturating_add(self.1.min_len())
+    }
+    fn max_len(&self) -> usize {
+        self.0.max_len().saturating_add(self.1.max_len())
     }
 }
 
@@ -42,11 +75,27 @@ where P1: Parser<'a>,
 {
     type Output = (P1::Output, P2::Output);
     fn call(&self, s: &'a str) -> Option<Self::Output> {
-        (0..=s.len()).rev().filter_map(
+        let i_min = max(
+            self.0.min_len(),
+            s.len().saturating_sub(self.1.max_len())
+        );
+        let i_max = min(
+            self.0.max_len().saturating_add(1),
+            (s.len()+1).saturating_sub(self.1.min_len())
+        );
+
+        (i_min..i_max).rev().filter_map(
             |i| self.0.call(&s[..i]).and_then(
                 |u1| self.1.call(&s[i..]).map(|u2| (u1, u2))
             )
         ).next()
+    }
+
+    fn min_len(&self) -> usize {
+        self.0.min_len().saturating_add(self.1.min_len())
+    }
+    fn max_len(&self) -> usize {
+        self.0.max_len().saturating_add(self.1.max_len())
     }
 }
 
@@ -63,7 +112,10 @@ impl<'a> Parser<'a> for Digits {
         } else {
             None
         }
-    }   
+    }
+
+    fn min_len(&self) -> usize {1}
+    fn max_len(&self) -> usize {usize::MAX}
 }
 
 
@@ -80,6 +132,9 @@ impl<'a, 'b> Parser<'a> for Str<'b> {
             None
         }
     }   
+
+    fn min_len(&self) -> usize {self.0.len()}
+    fn max_len(&self) -> usize {self.0.len()}
 }
 
 
@@ -110,7 +165,7 @@ mod tests {
         assert_eq!(parser.call(&"7 oranges"), None);
         assert_eq!(parser.call(&"four apples"), None);
 
-        assert_eq!(Seq2Fwd(Digits(10), Digits(10)).call(&"123"), Some(("", "123")));
+        assert_eq!(Seq2Fwd(Digits(10), Digits(10)).call(&"123"), Some(("1", "23")));
     }
 
     #[test]
@@ -121,7 +176,7 @@ mod tests {
         assert_eq!(parser.call(&"7 oranges"), None);
         assert_eq!(parser.call(&"four apples"), None);
 
-        assert_eq!(Seq2Rev(Digits(10), Digits(10)).call(&"123"), Some(("123", "")));
+        assert_eq!(Seq2Rev(Digits(10), Digits(10)).call(&"123"), Some(("12", "3")));
     }
 
     #[test]

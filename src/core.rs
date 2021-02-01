@@ -1,7 +1,9 @@
 pub trait Parser<'a> {
     type Output;
-
     fn call(&self, s: &'a str) -> Option<Self::Output>;
+
+    fn min_len(&self) -> usize;
+    fn max_len(&self) -> usize;
 
     fn post<V, F>(self, func: F) -> PostProcessedParser<Self, F>
     where
@@ -30,10 +32,12 @@ where
     F: Fn(Option<P::Output>) -> Option<V>,
 {
     type Output = V;
-
     fn call(&self, s: &'a str) -> Option<Self::Output> {
         (&self.mapping)(self.parser.call(s))
     }
+
+    fn min_len(&self) -> usize {self.parser.min_len()}
+    fn max_len(&self) -> usize {self.parser.max_len()}
 }
 
 

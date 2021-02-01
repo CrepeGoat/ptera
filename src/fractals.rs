@@ -41,10 +41,12 @@ where
     P: Parser<'a>,
 {
     type Output = P::Output;
-
     fn call(&self, s: &'a str) -> Option<Self::Output> {
         self.source().call(s)
     }
+
+    fn min_len(&self) -> usize {self.source().min_len()}
+    fn max_len(&self) -> usize {self.source().max_len()}
 }
 
 #[derive(Copy, Clone)]
@@ -66,6 +68,8 @@ impl<'a, O> Parser<'a> for ParserRef<'a, O>
     fn call(&self, s: &'a str) -> Option<Self::Output> {
         unsafe {self.source_ref()}.call(s)
     }
+    fn min_len(&self) -> usize {0}
+    fn max_len(&self) -> usize {usize::MAX}
 }
 
 
@@ -80,10 +84,10 @@ mod tests {
             Alt2(
                 Digits(10).post(|opt| opt.and_then(|s| s.parse::<u32>().ok())),
                 Alt2(
-                    Seq2Rev(fractal, Seq2Rev(Str(&" * "), fractal))
-                        .post(|opt| opt.map(|(x1, (_s, x2))| x1*x2)),
                     Seq2Rev(fractal, Seq2Rev(Str(&" + "), fractal))
                         .post(|opt| opt.map(|(x1, (_s, x2))| x1+x2)),
+                    Seq2Rev(fractal, Seq2Rev(Str(&" * "), fractal))
+                        .post(|opt| opt.map(|(x1, (_s, x2))| x1*x2)),
                 ),
             )
         );
