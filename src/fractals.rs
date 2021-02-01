@@ -26,35 +26,45 @@ where
 
         pinned_self
     }
+
+    fn source(&self) -> &P {
+        if let Some(parser) = &self.parser {
+            parser
+        } else {
+            unreachable!();
+        }
+    }
 }
 
-impl<'a, P> Parser<'a> for FractalParser<P>
+impl<'a, P: 'static> Parser<'a> for FractalParser<P>
 where
     P: Parser<'a>,
 {
     type Output = P::Output;
 
     fn call(&self, s: &'a str) -> Option<Self::Output> {
-        if let Some(parser) = &self.parser {
-            return parser.call(s);
-        }
-        unreachable!();
+        self.source().call(s)
     }
 }
 
 #[derive(Copy, Clone)]
 struct ParserRef<'a, O>(*const dyn Parser<'a, Output = O>);
 
+impl<'a, O> ParserRef<'a, O> {
+    unsafe fn source_ref(&self) -> &dyn Parser<'a, Output = O> {
+        match self.0.as_ref() {
+            Some(x) => x,
+            None => unreachable!(),
+        }
+    }
+}
+
 impl<'a, O> Parser<'a> for ParserRef<'a, O>
 {
     type Output = O;
 
     fn call(&self, s: &'a str) -> Option<Self::Output> {
-        let parser_ref = unsafe {match self.0.as_ref() {
-            Some(x) => x,
-            None => unreachable!(),
-        }};
-        parser_ref.call(s)
+        unsafe {self.source_ref()}.call(s)
     }
 }
 
