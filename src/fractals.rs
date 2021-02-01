@@ -70,20 +70,10 @@ mod tests {
             Alt2(
                 Digits(10).post(|opt| opt.and_then(|s| s.parse::<u32>().ok())),
                 Alt2(
-                    Seq2Rev(
-                        fractal,
-                        Seq2Rev(
-                            Str(&" * "),
-                            fractal,
-                        ),
-                    ).post(|opt| opt.map(|(x1, (_s, x2))| x1*x2)),
-                    Seq2Rev(
-                        fractal,
-                        Seq2Rev(
-                            Str(&" + "),
-                            fractal,
-                        ),
-                    ).post(|opt| opt.map(|(x1, (_s, x2))| x1+x2)),
+                    Seq2Rev(fractal, Seq2Rev(Str(&" * "), fractal))
+                        .post(|opt| opt.map(|(x1, (_s, x2))| x1*x2)),
+                    Seq2Rev(fractal, Seq2Rev(Str(&" + "), fractal))
+                        .post(|opt| opt.map(|(x1, (_s, x2))| x1+x2)),
                 ),
             )
         );
